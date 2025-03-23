@@ -17,7 +17,7 @@ The game will include the following mechanics:
 - 🌾 **Foraging**: Collect resources from bushes
 
 ## Inventory & Items 🎒
-Each player has **9 + 10** inventory spaces.
+Each player has **10** inventory spaces.
 ### Available Items:
 - 🛠️ **Tools**: Hoe, Scythe, Watering Can
 - 🥕 **Crops & Products**: Carrot, Carrot Seed, Jam
