@@ -3,7 +3,7 @@
 ## class ItemDescription
 
 ### fields
-- Id: ItemId
+- id: ItemDescriptionId
 - Name: String
 - price: Double
 - iconPath: String
@@ -13,16 +13,23 @@
 ## class TileDescription
 
 ### fields
-- Id: TileId
+- id: TileDescriptionId
 - Name: String
 - iconPath: String
+
+---
+
+## class Tile
+
+### fields
+- tileDescriptionId: TileDescriptionId
 
 ---
 
 ## class Item
 
 ### fields
-- itemId: ItemId
+- itemDescriptionId: ItemDescriptionId
 
 ---
 
@@ -41,11 +48,27 @@
 
 ---
 
+## GrowingCrop(Growable)
+
+### fields
+- currentProgress: Long
+- watered: Boolean
+
+---
+
 ## Manufacturer(Placeable)
 
 ### fields
-- inputToOutput: Map\<ItemId, ItemId>
-- stages: List\<Long>
+- input: ItemId
+- output: ItemId
+- duration: Long
+
+---
+
+## ArtisanMachine(Manufacturer)
+
+### fields
+- currentProgress: Long
 
 ---
 
@@ -68,14 +91,29 @@
 
 ---
 
+## class Game
+
+### fields
+- Tiles: [][]TileId
+- growingCrops: Map\<Point, GrowingCrop>
+- machines: Map\<Point, ArtisanMachine>
+- player: Player
+- house: House
+
+### behaviour
+
+- update(deltaTime: Double)
+- render(cameraX: Long, cameraY: Long, cameraWidth: Long, cameraHeight: Long, scale: Int)
+
+---
+
 ## class Player
 
 ### fields
 - playerId: Long
 - activeItem: Item
-- inventory: Map\<Long, Long>
+- inventory: Map\<ItemId, count>
 
 ### behaviour
 - pickup(itemId: Long)
 - trash(itemId: Long, count: Long)
-- 
