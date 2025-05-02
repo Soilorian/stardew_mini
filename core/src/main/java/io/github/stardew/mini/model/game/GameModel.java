@@ -15,7 +15,6 @@ public class GameModel {
     private TileDescriptionId[][] tiles;
     private Map<Point, GrowingCrop> growingCrops;
     private Player player;
-    private TimeSystem timeSystem;
     private final int mapWidth;
     private final int mapHeight;
     private OrthographicCamera camera; // Add camera field
@@ -27,7 +26,6 @@ public class GameModel {
         initializeTiles();
         growingCrops = new HashMap<>();
         player = new Player();
-        timeSystem = new TimeSystem();
         camera = new OrthographicCamera();
         camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera.position.set(player.getPosition().first, player.getPosition().second, 0);
@@ -46,8 +44,6 @@ public class GameModel {
     }
 
     public void update(float deltaTime) {
-        timeSystem.update(deltaTime);
-
         Pair<Float, Float> playerPos = player.getPosition();
         float playerX = playerPos.first * StardewMini.TILE_SIZE;
         float playerY = playerPos.second * StardewMini.TILE_SIZE;
