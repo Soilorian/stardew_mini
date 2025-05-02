@@ -5,6 +5,8 @@ public enum TileDescriptionId {
     SOIL("game/tiles/soil.png"),
     GRASS("game/tiles/grass.png"),
     WATER("game/tiles/water.png"),
+    SLOT("game/tiles/slot.png"),
+    HIGHLIGHT("game/tiles/highlight.png"),
     ;
     final String iconPath;
 

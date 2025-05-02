@@ -2,26 +2,30 @@ package io.github.stardew.mini.model.game;
 
 import io.github.stardew.mini.model.Pair;
 import io.github.stardew.mini.model.item.ItemDescriptionId;
+import io.github.stardew.mini.model.item.TileDescriptionId;
 
-import java.awt.*;
 import java.util.*;
 
 public class Player {
     private Map<ItemDescriptionId, Pair<Integer, Integer>> inventory;
-    private ItemDescriptionId activeItem;
     private Pair<Float, Float> playerPosition;
     private Stack<Integer> freeIndexes;
     private final Integer maxInventorySize = 9;
-    private int selectedInventoryIndex = -1;
+    private int selectedSlot = -1;
     private int movingDirection = 0;
 
     public Player() {
         inventory = new HashMap<>();
         freeIndexes = new Stack<>();
-        for (int i = maxInventorySize-1; i >= 0; i--) {
+        for (int i = maxInventorySize - 1; i >= 0; i--) {
             freeIndexes.push(i);
         }
-        playerPosition = new Pair<>(0f, 0f);
+        playerPosition = new Pair<>(3f, 3f);
+
+        addItem(ItemDescriptionId.HOE, 1);
+        addItem(ItemDescriptionId.SCYTHE, 1);
+        addItem(ItemDescriptionId.WATERING_CAN, 1);
+        addItem(ItemDescriptionId.CARROT_SEED, 5);
     }
 
     public void addItem(ItemDescriptionId itemId, int count) {
@@ -32,14 +36,6 @@ public class Player {
 
     public void useActiveItem(float worldX, float worldY) {
         // Implement item usage logic
-    }
-
-    public void move(float dx, float dy) {
-        // Implement movement logic
-    }
-
-    public float getMovementSpeed() {
-        return 200f; // pixels per second
     }
 
     public Pair<Float, Float> getPosition() {
@@ -54,9 +50,22 @@ public class Player {
         this.vy = vy;
     }
 
-    public void update(float delta) {
-        playerPosition.first += vx * delta;
-        playerPosition.second += vy * delta;
+    public void update(float delta, TileDescriptionId[][] tiles) {
+        tryMove(vx * delta, vy * delta, tiles);
+    }
+
+    public boolean tryMove(float dx, float dy, TileDescriptionId[][] tiles) {
+        int newX = (int) (playerPosition.first + dx);
+        int newY = (int) (playerPosition.second + dy);
+
+        if (newX < 0 || newX >= tiles.length || newY < 0 || newY >= tiles[0].length) return false;
+
+        if (tiles[newX][newY] != TileDescriptionId.WATER) {
+            playerPosition.first += dx;
+            playerPosition.second += dy;
+            return true;
+        }
+        return false;
     }
 
 
@@ -64,16 +73,14 @@ public class Player {
         return inventory;
     }
 
-    public void setSelectedInventoryIndex(int selectedSlot) {
-        selectedInventoryIndex = selectedSlot;
-    }
-
-    public int getSelectedInventoryIndex() {
-        return selectedInventoryIndex;
+    public void setSelectedSlot(int selectedSlot) {
+        this.selectedSlot = selectedSlot;
     }
 
     public ItemDescriptionId getSelectedItem() {
-        return activeItem;
+        return inventory.entrySet().stream().filter(
+            entry -> entry.getValue().second == selectedSlot
+        ).map(Map.Entry::getKey).findFirst().orElse(null);
     }
 
     public int getMovingDirection() {
@@ -90,6 +97,31 @@ public class Player {
 
     public float getSpeed() {
         return speed;
+    }
+
+    public int getSelectedSlot() {
+        return selectedSlot;
+    }
+
+    public void useSelectedItem() {
+        ItemDescriptionId selectedItem = getSelectedItem();
+        if (selectedItem == ItemDescriptionId.CARROT_SEED) {
+            reduceItem();
+        }
+    }
+
+    private void reduceItem() {
+        Pair<Integer, Integer> pair = inventory.getOrDefault(ItemDescriptionId.CARROT_SEED, null);
+        if (pair == null) {
+            return;
+        }
+        pair.first = pair.first - 1;
+        if (pair.first == 0) {
+            inventory.remove(ItemDescriptionId.CARROT_SEED);
+            freeIndexes.push(pair.second);
+        } else {
+            inventory.put(ItemDescriptionId.CARROT_SEED, pair);
+        }
     }
 }
 

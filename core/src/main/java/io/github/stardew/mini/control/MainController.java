@@ -48,12 +48,14 @@ public class MainController {
         GameController gameController = new GameController(game, this);
         gameController.init();
         gameController.run();
+        mainMenu.hide();
     }
 
     public void goToSettings() {
         SettingController settingController = new SettingController(this, game);
         settingController.init();
         settingController.run();
+        mainMenu.hide();
     }
 
     public void exit() {

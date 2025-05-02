@@ -6,7 +6,7 @@ import io.github.stardew.mini.view.asset.Assets;
 
 // 1. Main Application Class
 public class StardewMini extends Game {
-    public static final int SCALE = 50;
+    public static final int TILE_SIZE = 160;
 
 
     @Override

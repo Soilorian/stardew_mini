@@ -4,6 +4,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector3;
+import io.github.stardew.mini.StardewMini;
 import io.github.stardew.mini.control.GameController;
 import io.github.stardew.mini.model.Pair;
 import io.github.stardew.mini.model.game.GameModel;
@@ -30,13 +31,17 @@ public class GameMenuInputAdapter extends InputAdapter {
 
         if (keycode >= Input.Keys.NUM_1 && keycode <= Input.Keys.NUM_9) {
             int selectedSlot = keycode - Input.Keys.NUM_1;
-            game.getPlayer().setSelectedInventoryIndex(selectedSlot);
+            game.getPlayer().setSelectedSlot(selectedSlot);
             return true;
         }
 
         if (keycode == Input.Keys.ESCAPE) {
             gameController.goToMain();
             return true;
+        }
+
+        if (keycode == Input.Keys.N) {
+            gameController.advanceToNextDay();
         }
 
         return true;
@@ -50,10 +55,10 @@ public class GameMenuInputAdapter extends InputAdapter {
 
     @Override
     public boolean scrolled(float amountX, float amountY) {
-        int current = game.getPlayer().getSelectedInventoryIndex();
+        int current = game.getPlayer().getSelectedSlot();
         int size = game.getPlayer().getMaxInventorySize();
         int next = (current + (amountY > 0 ? 1 : -1) + size) % size;
-        game.getPlayer().setSelectedInventoryIndex(next);
+        game.getPlayer().setSelectedSlot(next);
         return true;
     }
 
@@ -88,20 +93,18 @@ public class GameMenuInputAdapter extends InputAdapter {
             dir = 2;
         }
 
-        // Normalize diagonal movement
         float length = (float) Math.sqrt(vx * vx + vy * vy);
         if (length > 0) {
             vx /= length;
             vy /= length;
             player.setMovingDirection(dir);
         } else {
-            player.setMovingDirection(0); // standing
+            player.setMovingDirection(0);
         }
 
-        // Apply velocity
-        float speed = player.getSpeed(); // e.g., 100 pixels/sec
+        float speed = player.getSpeed();
         player.setVelocity(vx * speed, vy * speed);
-        player.update(delta);
+        player.update(delta, game.getTiles());
     }
 
 
@@ -111,8 +114,8 @@ public class GameMenuInputAdapter extends InputAdapter {
         Vector3 worldCoordinates = camera.unproject(new Vector3(screenX, screenY, 0));
         Pair<Float, Float> playerPos = game.getPlayer().getPosition();
 
-        int tileX = (int) (worldCoordinates.x / 10);
-        int tileY = (int) (worldCoordinates.y / 10);
+        int tileX = (int) (worldCoordinates.x / StardewMini.TILE_SIZE);
+        int tileY = (int) (worldCoordinates.y / StardewMini.TILE_SIZE);
 
         int dx = tileX - Math.round(playerPos.first);
         int dy = tileY - Math.round(playerPos.second);
@@ -123,7 +126,7 @@ public class GameMenuInputAdapter extends InputAdapter {
 
         ItemDescriptionId selectedItem = game.getPlayer().getSelectedItem();
         if (selectedItem != null) {
-            gameController.useItem(game.getPlayer(), selectedItem, new Point(tileX, tileY));
+            gameController.useItem(selectedItem, new Point(tileX, tileY), game);
         }
     }
 }

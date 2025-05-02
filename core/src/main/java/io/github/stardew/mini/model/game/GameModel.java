@@ -1,7 +1,9 @@
 package io.github.stardew.mini.model.game;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import io.github.stardew.mini.StardewMini;
+import io.github.stardew.mini.model.Pair;
 import io.github.stardew.mini.model.item.GrowingCrop;
 import io.github.stardew.mini.model.item.TileDescriptionId;
 
@@ -14,26 +16,27 @@ public class GameModel {
     private Map<Point, GrowingCrop> growingCrops;
     private Player player;
     private TimeSystem timeSystem;
-    private final int width;
-    private final int height;
+    private final int mapWidth;
+    private final int mapHeight;
     private OrthographicCamera camera; // Add camera field
 
-    public GameModel(int width, int height) {
-        this.width = width;
-        this.height = height;
-        tiles = new TileDescriptionId[width][height];
+    public GameModel(int mapWidth, int mapHeight) {
+        this.mapWidth = mapWidth;
+        this.mapHeight = mapHeight;
+        tiles = new TileDescriptionId[mapWidth][mapHeight];
         initializeTiles();
         growingCrops = new HashMap<>();
         player = new Player();
         timeSystem = new TimeSystem();
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, width*10, height*10);
+        camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        camera.position.set(player.getPosition().first, player.getPosition().second, 0);
     }
 
     private void initializeTiles() {
-        for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height; j++) {
-                if (j < 5) {
+        for (int i = 0; i < mapWidth; i++) {
+            for (int j = 0; j < mapHeight; j++) {
+                if (j < 2) {
                     tiles[i][j] = TileDescriptionId.WATER;
                 } else {
                     tiles[i][j] = TileDescriptionId.GRASS;
@@ -44,8 +47,40 @@ public class GameModel {
 
     public void update(float deltaTime) {
         timeSystem.update(deltaTime);
-        // Update crops and machines
+
+        Pair<Float, Float> playerPos = player.getPosition();
+        float playerX = playerPos.first * StardewMini.TILE_SIZE;
+        float playerY = playerPos.second * StardewMini.TILE_SIZE;
+
+        float camX = camera.position.x;
+        float camY = camera.position.y;
+
+        float viewHalfWidth = camera.viewportWidth / 2;
+        float viewHalfHeight = camera.viewportHeight / 2;
+
+        float border = StardewMini.TILE_SIZE * 2; // 2-tile margin from edge
+
+        // Horizontal movement
+        if (playerX < camX - viewHalfWidth + border) {
+            camX = playerX + viewHalfWidth - border;
+        } else if (playerX > camX + viewHalfWidth - border) {
+            camX = playerX - viewHalfWidth + border;
+        }
+
+        // Vertical movement
+        if (playerY < camY - viewHalfHeight + border) {
+            camY = playerY + viewHalfHeight - border;
+        } else if (playerY > camY + viewHalfHeight - border) {
+            camY = playerY - viewHalfHeight + border;
+        }
+
+        camX = Math.max(viewHalfWidth, Math.min(camX, mapWidth * StardewMini.TILE_SIZE - viewHalfWidth));
+        camY = Math.max(viewHalfHeight, Math.min(camY, mapHeight * StardewMini.TILE_SIZE - viewHalfHeight));
+
+        camera.position.set(camX, camY, 0);
+        camera.update();
     }
+
 
     public void advanceToNextDay() {
         growingCrops.forEach((point, growingCrop) -> {
@@ -63,5 +98,32 @@ public class GameModel {
 
     public TileDescriptionId[][] getTiles() {
         return tiles;
+    }
+
+    public void addGrowingCrop(GrowingCrop growingCrop, Point position) {
+        growingCrops.put(position, growingCrop);
+    }
+
+    public void water(Point position) {
+        GrowingCrop growingCrop = growingCrops.get(position);
+        if (growingCrop != null) {
+            growingCrop.water();
+        }
+    }
+
+    public void harvest(Point position) {
+        GrowingCrop crop = growingCrops.get(position);
+        if (crop != null && crop.isReady()) {
+            growingCrops.remove(position);
+            player.addItem(crop.getResult(), 1);
+        }
+    }
+
+    public TileDescriptionId getTile(Point point) {
+        return tiles[point.x][point.y];
+    }
+
+    public Map<Point, GrowingCrop> getGrowingCrops() {
+        return growingCrops;
     }
 }
